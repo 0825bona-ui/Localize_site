@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Localize — 다언어 로컬라이징 분석 커뮤니티</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f5f7;
+  --bg2: #ffffff;
+  --bg3: #f0f0f3;
+  --bg4: #e8e8ed;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1a2e;
+  --text2: #5a5a72;
+  --text3: #a0a0b8;
+  --accent: #6c5ce7;
+  --accent2: #5548c8;
+  --accent-bg: rgba(108,92,231,0.09);
+  --fr: #c94f3a;
+  --fr-bg: rgba(201,79,58,0.09);
+  --en: #2e8b57;
+  --en-bg: rgba(46,139,87,0.09);
+  --ko: #c47c10;
+  --ko-bg: rgba(196,124,16,0.09);
+  --ja: #8e44ad;
+  --ja-bg: rgba(142,68,173,0.09);
+  --zh: #2471a3;
+  --zh-bg: rgba(36,113,163,0.09);
+  --success: #2e8b57;
+  --warning: #c47c10;
+  --danger: #c94f3a;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 5px;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  --shadow-sm: 0 1px 6px rgba(0,0,0,0.06);
+  --font-display: 'Noto Serif KR', 'Noto Sans KR', serif;
+  --font-body: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;min-height:100vh;word-break:keep-all;-webkit-font-smoothing:antialiased}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'Noto Serif KR',serif;font-size:22px;color:var(--text);letter-spacing:-0.5px;font-weight:700}
+.nav-logo span{color:var(--accent)}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{padding:6px 14px;border-radius:var(--radius-xs);border:none;background:none;color:var(--text2);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;letter-spacing:-0.2px}
+.nav-tab:hover{color:var(--text);background:var(--bg3)}
+.nav-tab.active{color:var(--accent2);background:var(--accent-bg)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--accent-bg);color:var(--accent2);border:1px solid rgba(124,109,250,0.25)}
+
+/* HERO */
+.hero{padding:5rem 2rem 3rem;text-align:center;max-width:720px;margin:0 auto}
+.hero-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);margin-bottom:1.5rem;padding:5px 12px;border:1px solid rgba(124,109,250,0.3);border-radius:20px;background:var(--accent-bg)}
+.hero h1{font-family:'Noto Serif KR',serif;font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.25;color:var(--text);margin-bottom:1rem;letter-spacing:-0.5px;font-weight:700}
+.hero h1 em{color:var(--accent2);font-style:italic}
+.hero p{color:var(--text2);font-size:16px;line-height:1.7;max-width:560px;margin:0 auto}
+
+/* PAGE SECTIONS */
+.page{display:none;padding:2rem;max-width:1100px;margin:0 auto}
+.page.active{display:block}
+
+/* ANALYZE LAYOUT */
+.analyze-layout{display:grid;grid-template-columns:380px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:900px){.analyze-layout{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+.card-title{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.card-title svg{opacity:.6}
+
+/* FORM ELEMENTS */
+label.field-label{display:block;font-size:12px;font-weight:500;color:var(--text2);letter-spacing:0.5px;margin-bottom:6px}
+textarea,input[type=text],select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-body);font-size:14px;border-radius:var(--radius-sm);padding:10px 12px;transition:border .2s,box-shadow .2s;outline:none;resize:none}
+textarea:focus,input[type=text]:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,109,250,0.15)}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239898a8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+select option{background:var(--bg3)}
+.field-group{margin-bottom:1rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* LANG PILLS */
+.lang-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lang-pill{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer;transition:all .2s;user-select:none}
+.lang-pill:hover{border-color:var(--border2);color:var(--text)}
+.lang-pill.active-fr{border-color:var(--fr);background:var(--fr-bg);color:var(--fr)}
+.lang-pill.active-en{border-color:var(--en);background:var(--en-bg);color:var(--en)}
+.lang-pill.active-ko{border-color:var(--ko);background:var(--ko-bg);color:var(--ko)}
+.lang-pill.active-ja{border-color:var(--ja);background:var(--ja-bg);color:var(--ja)}
+.lang-pill.active-zh{border-color:var(--zh);background:var(--zh-bg);color:var(--zh)}
+
+/* MEDIA CHIPS */
+.media-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.media-chip{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;cursor:pointer;transition:all .2s}
+.media-chip.active{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2)}
+
+/* PRIMARY BUTTON */
+.btn-primary{width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:1rem}
+.btn-primary:hover{background:#6b5cf0;transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,109,250,0.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{padding:8px 16px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:none;color:var(--text2);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-secondary:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.btn-ghost{padding:6px 12px;border-radius:var(--radius-xs);border:none;background:none;color:var(--text2);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+
+/* RESULTS */
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.results-header h3{font-family:var(--font-display);font-size:20px;color:var(--text)}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.result-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;animation:fadeUp .4s ease both;position:relative;overflow:hidden}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.result-card.lang-fr::before{background:var(--fr)}
+.result-card.lang-en::before{background:var(--en)}
+.result-card.lang-ko::before{background:var(--ko)}
+.result-card.lang-ja::before{background:var(--ja)}
+.result-card.lang-zh::before{background:var(--zh)}
+.result-card.loading{opacity:.5}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.result-lang-tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;margin-bottom:10px}
+.result-localized{font-family:var(--font-display);font-size:17px;color:var(--text);line-height:1.55;margin-bottom:10px;font-style:italic;font-weight:500;letter-spacing:-0.2px}
+.strategy-badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:0.5px;padding:3px 8px;border-radius:var(--radius-xs);margin-bottom:8px}
+.strategy-직역{background:rgba(76,175,130,0.15);color:var(--en)}
+.strategy-의역{background:rgba(232,169,58,0.15);color:var(--ko)}
+.strategy-문화적변형{background:rgba(124,109,250,0.15);color:var(--accent2)}
+.strategy-원문유지{background:var(--bg4);color:var(--text2)}
+.tone-line{font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.keywords{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.keyword{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg4);color:var(--text2)}
+.cultural-text{font-size:13px;color:var(--text2);line-height:1.75;border-top:1px solid var(--border);padding-top:10px;word-break:keep-all}
+.loading-pulse{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:13px;padding:8px 0}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* CONTEXT PREVIEW */
+.context-preview{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:1rem;font-size:13px;color:var(--text2);display:none}
+.context-preview.show{display:block}
+.context-preview strong{color:var(--text);font-weight:500}
+
+/* COMMUNITY TABS */
+.comm-tabs{display:flex;gap:2px;margin-bottom:1.5rem;background:var(--bg2);padding:4px;border-radius:var(--radius-sm);width:fit-content;border:1px solid var(--border)}
+.comm-tab{padding:7px 18px;border-radius:var(--radius-xs);border:none;background:none;color:var(--text2);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s}
+.comm-tab.active{background:var(--bg4);color:var(--text);font-weight:500}
+.comm-content{display:none}
+.comm-content.active{display:block}
+
+/* COMMENTS */
+.comments-wrap{margin-top:1.5rem}
+.comment-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;animation:fadeUp .3s ease both}
+.comment-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.comment-name{font-size:14px;font-weight:500;color:var(--text)}
+.comment-lang-badge{font-size:11px;padding:2px 7px;border-radius:20px}
+.comment-time{font-size:11px;color:var(--text3);margin-left:auto}
+.comment-body{font-size:14px;color:var(--text2);line-height:1.75;padding-left:40px;word-break:keep-all}
+.comment-actions{display:flex;gap:6px;padding-left:40px;margin-top:8px}
+.reply-thread{padding-left:40px;margin-top:8px;border-left:2px solid var(--border);padding-left:52px}
+.reply-box{background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;font-size:13px}
+.reply-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.reply-body{color:var(--text2);line-height:1.5}
+
+/* VOTE BUTTON */
+.vote-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:none;color:var(--text2);font-family:var(--font-body);font-size:12px;cursor:pointer;transition:all .2s}
+.vote-btn:hover{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
+.vote-btn.voted{border-color:var(--accent);color:var(--accent2);background:var(--accent-bg)}
+.reply-toggle{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-xs);border:none;background:none;color:var(--text3);font-family:var(--font-body);font-size:12px;cursor:pointer;transition:all .2s}
+.reply-toggle:hover{color:var(--text2)}
+
+/* ADD COMMENT FORM */
+.add-comment-form{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-top:1rem}
+.add-comment-form h4{font-size:13px;font-weight:600;color:var(--text2);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-row.three{grid-template-columns:1fr 1fr 1fr}
+.submit-sm{padding:9px 18px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px}
+.submit-sm:hover{background:#6b5cf0}
+
+/* REPORT BOARD */
+.report-grid{display:grid;gap:12px}
+.report-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:border .2s}
+.report-card:hover{border-color:var(--border2)}
+.report-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.report-phrase{font-family:var(--font-display);font-size:17px;color:var(--text);font-style:italic;margin-bottom:4px;font-weight:500;letter-spacing:-0.2px}
+.report-original{font-size:13px;color:var(--text3)}
+.report-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.report-body{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.report-tag{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--bg4);color:var(--text2)}
+.report-issue-tag{background:rgba(232,112,90,0.15);color:var(--fr)}
+.report-actions{display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);padding-top:10px;margin-top:4px}
+.report-comment-count{font-size:12px;color:var(--text3);margin-left:auto;display:flex;align-items:center;gap:4px}
+.expand-btn{padding:4px 10px;border-radius:var(--radius-xs);border:none;background:none;color:var(--text3);font-size:12px;font-family:var(--font-body);cursor:pointer;transition:all .2s}
+.expand-btn:hover{color:var(--text2);background:var(--bg3)}
+.expanded-comments{display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.expanded-comments.open{display:block}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text3)}
+.empty-state svg{margin-bottom:1rem;opacity:.4}
+.empty-state p{font-size:14px}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+
+/* SPINNER */
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem}
+.stat-chip{font-size:12px;padding:4px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:inline-flex;align-items:center;gap:5px}
+.stat-chip span{color:var(--text);font-weight:500}
+
+/* HISTORY */
+.history-list{display:flex;flex-direction:column;gap:6px}
+.history-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+.history-item:hover{border-color:var(--border2);background:var(--bg4)}
+.history-phrase{font-size:14px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-langs{font-size:11px;color:var(--text3)}
+.history-time{font-size:11px;color:var(--text3);flex-shrink:0}
+
+/* SECTION TITLE */
+.section-title{font-family:'Noto Serif KR',serif;font-size:1.6rem;color:var(--text);margin-bottom:0.4rem;font-weight:700;letter-spacing:-0.3px}
+.section-sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
+
+/* REPLY INPUT */
+.reply-input-wrap{display:none;padding-left:52px;margin-top:6px;margin-bottom:8px}
+.reply-input-wrap.show{display:flex;gap:8px}
+.reply-input-wrap input{flex:1;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:13px;outline:none}
+.reply-input-wrap input:focus{border-color:var(--accent)}
+.reply-submit{padding:7px 12px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-size:13px;cursor:pointer;font-family:var(--font-body)}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;color:var(--text);z-index:999;animation:fadeUp .3s ease;box-shadow:var(--shadow)}
+
+/* TAG FILTER */
+.tag-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.tag-filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text2);font-size:12px;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.tag-filter-btn:hover{border-color:var(--border2);color:var(--text)}
+.tag-filter-btn.active{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2)}
+
+/* ADD REPORT BUTTON */
+.fab{position:fixed;bottom:2rem;right:2rem;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(124,109,250,0.5);transition:all .2s;z-index:50}
+.fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(124,109,250,0.6)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:1.75rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:fadeUp .3s ease}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-title{font-family:var(--font-display);font-size:20px;color:var(--text)}
+.modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.modal-close:hover{background:var(--bg3);color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Local<span>ize</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('analyze')">분석하기</button>
+    <button class="nav-tab" onclick="showPage('community')">커뮤니티</button>
+    <button class="nav-tab" onclick="showPage('reports')">어색한 번역 제보</button>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge" id="totalBadge">0개 분석</span>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ PAGE: ANALYZE ═══ -->
+<div id="page-analyze" class="page active">
+  <div class="hero">
+    <div class="hero-label">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6h4M6 4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      AI 기반 다언어 로컬라이징 분석
+    </div>
+    <h1>번역을 넘어,<br><em>문화를 읽는다</em></h1>
+    <p>광고 문구, 영화 대사, 책의 한 구절—원문의 맥락과 함께 입력하면 각 언어권의 문화적 프레임에 맞게 로컬라이징 분석을 제공합니다.</p>
+  </div>
+
+  <div class="analyze-layout">
+    <!-- LEFT: INPUT -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3h12M2 6h8M2 9h10M2 12h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          문구 입력
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">분석할 문구 *</label>
+          <textarea id="inputText" rows="3" placeholder="예: Just Do It / C'est tout ce que j'aime / 어디서나 거기가 집입니다"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">원문 언어</label>
+          <div class="lang-pills" id="srcPills">
+            <div class="lang-pill" data-src="EN" onclick="setSrc(this,'EN')">🇬🇧 영어</div>
+            <div class="lang-pill" data-src="FR" onclick="setSrc(this,'FR')">🇫🇷 프랑스어</div>
+            <div class="lang-pill" data-src="KO" onclick="setSrc(this,'KO')">🇰🇷 한국어</div>
+            <div class="lang-pill" data-src="JA" onclick="setSrc(this,'JA')">🇯🇵 일본어</div>
+            <div class="lang-pill" data-src="ZH" onclick="setSrc(this,'ZH')">🇨🇳 중국어</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">분석할 목표 언어 (복수 선택)</label>
+          <div class="lang-pills" id="targetPills">
+            <div class="lang-pill active-fr" data-lang="FR" onclick="toggleLang(this,'FR')">🇫🇷 프랑스어</div>
+            <div class="lang-pill active-en" data-lang="EN" onclick="toggleLang(this,'EN')">🇬🇧 영어</div>
+            <div class="lang-pill active-ko" data-lang="KO" onclick="toggleLang(this,'KO')">🇰🇷 한국어</div>
+            <div class="lang-pill active-ja" data-lang="JA" onclick="toggleLang(this,'JA')">🇯🇵 일본어</div>
+            <div class="lang-pill active-zh" data-lang="ZH" onclick="toggleLang(this,'ZH')">🇨🇳 중국어</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2C4.686 2 2 4.686 2 8s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm0 2.5v3.75l2.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          출처 및 맥락 (선택)
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">출처 매체 유형</label>
+          <div class="media-chips">
+            <div class="media-chip" data-media="광고" onclick="toggleMedia(this)">📢 광고</div>
+            <div class="media-chip" data-media="영화" onclick="toggleMedia(this)">🎬 영화</div>
+            <div class="media-chip" data-media="소설/책" onclick="toggleMedia(this)">📚 소설/책</div>
+            <div class="media-chip" data-media="드라마" onclick="toggleMedia(this)">📺 드라마</div>
+            <div class="media-chip" data-media="SNS" onclick="toggleMedia(this)">📱 SNS</div>
+            <div class="media-chip" data-media="노래" onclick="toggleMedia(this)">🎵 노래</div>
+            <div class="media-chip" data-media="게임" onclick="toggleMedia(this)">🎮 게임</div>
+            <div class="media-chip" data-media="기타" onclick="toggleMedia(this)">✏️ 기타</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">출처 작품명</label>
+          <input type="text" id="inputSource" placeholder="예: 어린왕자, Nike 광고 캠페인, 기생충 ...">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">맥락 설명</label>
+          <textarea id="inputContext" rows="3" placeholder="어떤 장면이나 상황에서 쓰인 표현인지 설명해 주세요. 맥락이 구체적일수록 더 정확한 분석이 가능합니다.&#10;예: 영화 속 주인공이 오랜 고민 끝에 도전을 결심하는 순간 등장하는 대사"></textarea>
+        </div>
+
+        <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.6 3.5L8 10l-3.1 1.5.6-3.5L3 5.5l3.5-.5L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="rgba(255,255,255,0.2)"/></svg>
+          로컬라이징 분석하기
+        </button>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="card" style="margin-top:1rem" id="historyCard">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8A6 6 0 1 0 8 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M2 4v4h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          최근 분석
+        </div>
+        <div id="historyList" class="history-list">
+          <div class="empty-state" style="padding:1.5rem 0">
+            <p style="font-size:13px">아직 분석한 문구가 없어요</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div id="resultsArea" style="display:none">
+        <div class="results-header">
+          <h3 id="resultsTitle">분석 결과</h3>
+          <button class="btn-secondary" onclick="shareResult()">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9 1l3 3-3 3M12 4H5C3.3 4 2 5.3 2 7v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            공유
+          </button>
+        </div>
+
+        <!-- context preview -->
+        <div class="context-preview" id="contextPreview"></div>
+
+        <div class="stats-bar" id="statsBar"></div>
+        <div class="results-grid" id="resultsGrid"></div>
+
+        <!-- COMMENTS -->
+        <div class="comments-wrap" id="commentsWrap">
+          <div class="divider"></div>
+          <div class="section-title" style="font-size:1.2rem;margin-bottom:.25rem">커뮤니티 의견</div>
+          <div class="section-sub" style="margin-bottom:1rem">이 분석에 대한 생각을 자유롭게 나눠주세요</div>
+          <div id="resultCommentList"></div>
+          <div class="add-comment-form" id="resultCommentForm">
+            <h4>의견 남기기</h4>
+            <div class="form-row">
+              <div>
+                <label class="field-label">이름 / 닉네임</label>
+                <input type="text" id="rc_name" placeholder="익명">
+              </div>
+              <div>
+                <label class="field-label">담당 언어</label>
+                <select id="rc_lang">
+                  <option value="FR">🇫🇷 프랑스어</option>
+                  <option value="EN">🇬🇧 영어</option>
+                  <option value="KO">🇰🇷 한국어</option>
+                  <option value="JA">🇯🇵 일본어</option>
+                  <option value="ZH">🇨🇳 중국어</option>
+                  <option value="OTHER">기타</option>
+                </select>
+              </div>
+            </div>
+            <label class="field-label">의견</label>
+            <textarea id="rc_text" rows="3" placeholder="번역의 어색한 점, 문화적 뉘앙스, 더 나은 표현 등 자유롭게 써주세요"></textarea>
+            <button class="submit-sm" onclick="submitResultComment()">의견 등록</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- placeholder -->
+      <div id="resultPlaceholder" class="card" style="text-align:center;padding:4rem 2rem;border-style:dashed">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin:0 auto 1rem;opacity:.2"><circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="1.5"/><path d="M16 24h16M24 16v16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p style="color:var(--text3);font-size:14px">문구를 입력하고 분석을 시작하세요</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ PAGE: COMMUNITY ═══ -->
+<div id="page-community" class="page">
+  <div style="padding:2rem 0 1rem">
+    <div class="section-title">커뮤니티</div>
+    <div class="section-sub">분석 결과와 번역에 대해 자유롭게 토론하는 공간입니다</div>
+  </div>
+
+  <div class="comm-tabs">
+    <button class="comm-tab active" onclick="switchCommTab('all')">전체 글</button>
+    <button class="comm-tab" onclick="switchCommTab('fr')">🇫🇷 프랑스어</button>
+    <button class="comm-tab" onclick="switchCommTab('en')">🇬🇧 영어</button>
+    <button class="comm-tab" onclick="switchCommTab('ko')">🇰🇷 한국어</button>
+    <button class="comm-tab" onclick="switchCommTab('ja')">🇯🇵 일본어</button>
+    <button class="comm-tab" onclick="switchCommTab('zh')">🇨🇳 중국어</button>
+  </div>
+
+  <div id="communityList"></div>
+
+  <div class="add-comment-form" style="margin-top:1rem">
+    <h4>새 글 작성</h4>
+    <div class="form-row three">
+      <div>
+        <label class="field-label">이름</label>
+        <input type="text" id="comm_name" placeholder="익명">
+      </div>
+      <div>
+        <label class="field-label">언어 파트</label>
+        <select id="comm_lang">
+          <option value="FR">🇫🇷 프랑스어</option>
+          <option value="EN">🇬🇧 영어</option>
+          <option value="KO">🇰🇷 한국어</option>
+          <option value="JA">🇯🇵 일본어</option>
+          <option value="ZH">🇨🇳 중국어</option>
+          <option value="OTHER">기타</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">주제 태그</label>
+        <select id="comm_tag">
+          <option value="일반">💬 일반</option>
+          <option value="프레이밍">🧠 프레이밍</option>
+          <option value="로컬라이징">🌐 로컬라이징</option>
+          <option value="문화차이">🎭 문화 차이</option>
+          <option value="번역오류">⚠️ 번역 오류</option>
+        </select>
+      </div>
+    </div>
+    <label class="field-label">내용</label>
+    <textarea id="comm_text" rows="3" placeholder="분석 결과, 번역 표현, 문화적 차이 등에 대해 자유롭게 이야기해 주세요"></textarea>
+    <button class="submit-sm" onclick="submitCommunityPost()">글 등록</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ PAGE: REPORTS ═══ -->
+<div id="page-reports" class="page">
+  <div style="padding:2rem 0 1rem;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <div class="section-title">어색한 번역 제보</div>
+      <div class="section-sub">이 번역 좀 이상하지 않나요? 누구나 제보하고 함께 토론할 수 있어요</div>
+    </div>
+    <button class="btn-secondary" onclick="openReportModal()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      제보 올리기
+    </button>
+  </div>
+
+  <div class="tag-filter" id="reportTagFilter">
+    <button class="tag-filter-btn active" onclick="filterReports('all',this)">전체</button>
+    <button class="tag-filter-btn" onclick="filterReports('FR',this)">🇫🇷 프랑스어</button>
+    <button class="tag-filter-btn" onclick="filterReports('EN',this)">🇬🇧 영어</button>
+    <button class="tag-filter-btn" onclick="filterReports('KO',this)">🇰🇷 한국어</button>
+    <button class="tag-filter-btn" onclick="filterReports('JA',this)">🇯🇵 일본어</button>
+    <button class="tag-filter-btn" onclick="filterReports('ZH',this)">🇨🇳 중국어</button>
+  </div>
+
+  <div id="reportGrid" class="report-grid"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ MODAL: REPORT ═══ -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">어색한 번역 제보</div>
+      <button class="modal-close" onclick="closeReportModal()">×</button>
+    </div>
+    <div class="field-group">
+      <label class="field-label">어색한 번역 문구 *</label>
+      <input type="text" id="rep_phrase" placeholder="예: C'est tout ce que j'aime">
+    </div>
+    <div class="field-group">
+      <label class="field-label">원문 (알고 있다면)</label>
+      <input type="text" id="rep_original" placeholder="예: I'm Lovin' It">
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="field-label">해당 언어</label>
+        <select id="rep_lang">
+          <option value="FR">🇫🇷 프랑스어</option>
+          <option value="EN">🇬🇧 영어</option>
+          <option value="KO">🇰🇷 한국어</option>
+          <option value="JA">🇯🇵 일본어</option>
+          <option value="ZH">🇨🇳 중국어</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">출처</label>
+        <input type="text" id="rep_source" placeholder="예: McDonald's 광고">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">어떤 점이 어색한가요? *</label>
+      <textarea id="rep_reason" rows="4" placeholder="직역이 너무 어색하다, 문화적 맥락이 전혀 다르다, 감정 전달이 안 된다 등 자유롭게 써주세요"></textarea>
+    </div>
+    <div class="field-group">
+      <label class="field-label">더 자연스러운 표현 제안 (선택)</label>
+      <input type="text" id="rep_suggestion" placeholder="예: 내가 좋아하는 모든 것">
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="field-label">이름</label>
+        <input type="text" id="rep_name" placeholder="익명">
+      </div>
+      <div>
+        <label class="field-label">문제 유형</label>
+        <select id="rep_issue">
+          <option value="직역문제">직역 문제</option>
+          <option value="문화차이">문화적 차이</option>
+          <option value="어조불일치">어조 불일치</option>
+          <option value="의미손실">의미 손실</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <button class="submit-sm" style="width:100%;padding:12px;font-size:14px" onclick="submitReport()">제보 등록하기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  ⚙️  SUPABASE 설정 — 아래 두 값을 본인 것으로 교체하세요
+//     1) https://supabase.com 에서 새 프로젝트 생성
+//     2) Project Settings → API 에서 URL, anon key 복사
+// ══════════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://rltckifjjbfwetggekry.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_KOIl0vA9shCE7k9eO9t9IQ_4XSkvqRm';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const LANG_META = {
+  FR:{label:'프랑스어',flag:'🇫🇷',color:'var(--fr)',bg:'var(--fr-bg)',cls:'lang-fr',acv:'active-fr'},
+  EN:{label:'영어',flag:'🇬🇧',color:'var(--en)',bg:'var(--en-bg)',cls:'lang-en',acv:'active-en'},
+  KO:{label:'한국어',flag:'🇰🇷',color:'var(--ko)',bg:'var(--ko-bg)',cls:'lang-ko',acv:'active-ko'},
+  JA:{label:'일본어',flag:'🇯🇵',color:'var(--ja)',bg:'var(--ja-bg)',cls:'lang-ja',acv:'active-ja'},
+  ZH:{label:'중국어',flag:'🇨🇳',color:'var(--zh)',bg:'var(--zh-bg)',cls:'lang-zh',acv:'active-zh'},
+  OTHER:{label:'기타',flag:'🌐',color:'var(--text2)',bg:'var(--bg3)',cls:'',acv:''},
+};
+const AV_COLORS=['#7c6dfa','#e8705a','#4caf82','#c47fd4','#5ba8e8','#e8a93a'];
+
+// ── STATE ────────────────────────────────────────────────────────────
+let selectedSrc='EN';
+let selectedTargets=new Set(['FR','EN','KO','JA','ZH']);
+let selectedMedia='';
+let analysisHistory=[];
+let currentAnalysisId=null;
+let resultComments={};
+let communityPosts=[];
+let reports=[];
+let currentReportFilter='all';
+let currentCommFilter='all';
+let votes={}; // local voted state by id
+
+// ── INIT ─────────────────────────────────────────────────────────────
+async function init(){
+  setSrcDefault();
+  await Promise.all([loadHistory(), loadCommunity(), loadReports()]);
+  updateBadge();
+}
+init();
+
+function setSrcDefault(){
+  const first=document.querySelector('#srcPills .lang-pill[data-src="EN"]');
+  if(first){first.classList.add('active-en');selectedSrc='EN';}
+}
+
+function setSrc(el,code){
+  document.querySelectorAll('#srcPills .lang-pill').forEach(p=>{
+    p.className='lang-pill';
+  });
+  el.classList.add(LANG_META[code].acv);
+  selectedSrc=code;
+}
+
+function toggleLang(el,code){
+  if(selectedTargets.has(code)){
+    if(selectedTargets.size<=1)return;
+    selectedTargets.delete(code);
+    el.className='lang-pill';
+  } else {
+    selectedTargets.add(code);
+    el.classList.add(LANG_META[code].acv);
+  }
+}
+
+function toggleMedia(el){
+  document.querySelectorAll('.media-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  selectedMedia=el.dataset.media;
+}
+
+// ── ANALYSIS ────────────────────────────────────────────────────────
+async function runAnalysis(){
+  const text=document.getElementById('inputText').value.trim();
+  if(!text){showToast('분석할 문구를 입력해 주세요');return;}
+  const source=document.getElementById('inputSource').value.trim();
+  const context=document.getElementById('inputContext').value.trim();
+  const btn=document.getElementById('analyzeBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> 분석 중...';
+
+  document.getElementById('resultPlaceholder').style.display='none';
+  document.getElementById('resultsArea').style.display='block';
+
+  const srcMeta=LANG_META[selectedSrc];
+  const langs=[...selectedTargets].filter(l=>l!==selectedSrc);
+  currentAnalysisId = null; // will be set after DB save
+
+  // title
+  document.getElementById('resultsTitle').textContent=`"${text.length>40?text.slice(0,40)+'…':text}"`;
+
+  // context preview
+  const prev=document.getElementById('contextPreview');
+  if(source||context||selectedMedia){
+    let html='';
+    if(selectedMedia)html+=`<strong>${selectedMedia}</strong> `;
+    if(source)html+=`<strong>${source}</strong> `;
+    if(source&&context)html+='— ';
+    if(context)html+=context;
+    prev.innerHTML=html;
+    prev.classList.add('show');
+  } else {
+    prev.classList.remove('show');
+  }
+
+  // stats
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat-chip">원문: <span>${srcMeta.flag} ${srcMeta.label}</span></div>
+    <div class="stat-chip">분석: <span>${langs.length}개 언어</span></div>
+    ${source?`<div class="stat-chip">출처: <span>${source}</span></div>`:''}
+    ${selectedMedia?`<div class="stat-chip">매체: <span>${selectedMedia}</span></div>`:''}`;
+
+  // skeleton cards
+  const grid=document.getElementById('resultsGrid');
+  grid.innerHTML='';
+  langs.forEach((lang,i)=>{
+    const m=LANG_META[lang];
+    grid.innerHTML+=`<div class="result-card ${m.cls} loading" id="rc-${lang}" style="animation-delay:${i*0.06}s">
+      <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
+      <div class="loading-pulse"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>분석 중...</span></div>
+    </div>`;
+  });
+
+  // parallel API calls
+  await Promise.all(langs.map(lang=>fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia)));
+
+  // save to Supabase
+  try {
+    const {data} = await sb.from('analyses').insert({
+      phrase: text, src_lang: selectedSrc, target_langs: [...langs],
+      source_title: source||null, source_media: selectedMedia||null,
+      context: context||null
+    }).select().single();
+    if(data) currentAnalysisId = data.id;
+  } catch(e){ currentAnalysisId = Date.now().toString(); }
+
+  analysisHistory.unshift({id:currentAnalysisId, text, src:selectedSrc, langs:[...langs], source, context, media:selectedMedia, time:'방금 전'});
+  if(analysisHistory.length>10)analysisHistory.pop();
+  renderHistory();
+  updateBadge();
+
+  btn.disabled=false;
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.6 3.5L8 10l-3.1 1.5.6-3.5L3 5.5l3.5-.5L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="rgba(255,255,255,0.2)"/></svg>다시 분석하기';
+
+  renderResultComments();
+  if(currentAnalysisId) await loadResultComments(currentAnalysisId);
+  document.getElementById('commentsWrap').style.display='block';
+}
+
+async function fetchLangAnalysis(lang,text,srcMeta,source,context,media){
+  const m=LANG_META[lang];
+  const contextPart=[];
+  if(media)contextPart.push(`매체 유형: ${media}`);
+  if(source)contextPart.push(`출처 작품: ${source}`);
+  if(context)contextPart.push(`맥락 설명: ${context}`);
+  const contextBlock=contextPart.length?`\n\n[출처 및 맥락]\n${contextPart.join('\n')}`:'';
+
+  const prompt=`당신은 글로벌 광고 로컬라이징 및 언어 문화 전문가입니다.
+
+원문 (${srcMeta.label}): "${text}"${contextBlock}
+
+위 문구를 ${m.label}로 로컬라이징하는 분석을 JSON으로만 출력하세요.
+
+{
+  "localized": "${m.label}로 가장 자연스럽고 설득력 있게 로컬라이징된 문구",
+  "strategy": "직역|의역|문화적변형|원문유지 중 정확히 하나",
+  "tone": "어조 변화를 한 줄로 (예: 명령형→철학적 선언, 1인칭→2인칭)",
+  "cultural": "${m.label}권의 문화적 가치관·의사소통 방식과 연결한 분석 (3문장, 출처/맥락 반영)",
+  "keyword": "핵심 변화 키워드 3개 (쉼표 구분)"
+}
+
+JSON만 출력. 다른 텍스트, 마크다운 없이.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const raw=data.content.map(i=>i.text||'').join('');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const p=JSON.parse(clean);
+    const keywords=(p.keyword||'').split(',').map(k=>`<div class="keyword">${k.trim()}</div>`).join('');
+    document.getElementById(`rc-${lang}`).innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
+        <span class="strategy-badge strategy-${p.strategy}">${p.strategy}</span>
+      </div>
+      <div class="result-localized">"${p.localized}"</div>
+      <div class="tone-line">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        ${p.tone}
+      </div>
+      <div class="keywords">${keywords}</div>
+      <div class="cultural-text">${p.cultural}</div>`;
+    document.getElementById(`rc-${lang}`).classList.remove('loading');
+  }catch(e){
+    document.getElementById(`rc-${lang}`).innerHTML=`
+      <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
+      <div style="font-size:13px;color:var(--danger);padding:8px 0">분석 오류가 발생했습니다. 다시 시도해 주세요.</div>`;
+    document.getElementById(`rc-${lang}`).classList.remove('loading');
+  }
+}
+
+// ── RESULT COMMENTS ─────────────────────────────────────────────────
+async function submitResultComment(){
+  const name=document.getElementById('rc_name').value.trim()||'익명';
+  const lang=document.getElementById('rc_lang').value;
+  const text=document.getElementById('rc_text').value.trim();
+  if(!text){showToast('의견을 입력해 주세요');return;}
+  if(!currentAnalysisId){showToast('분석을 먼저 실행해 주세요');return;}
+  try{
+    await sb.from('result_comments').insert({analysis_id:currentAnalysisId,name,lang,body:text});
+    document.getElementById('rc_text').value='';
+    await loadResultComments(currentAnalysisId);
+    showToast('의견이 등록되었습니다 ✓');
+  }catch(e){ showToast('등록 오류: '+e.message); }
+}
+
+async function loadResultComments(analysisId){
+  if(!analysisId)return;
+  try{
+    const {data}=await sb.from('result_comments')
+      .select('*, replies:result_replies(*)')
+      .eq('analysis_id',analysisId)
+      .order('created_at',{ascending:false});
+    resultComments[analysisId]=(data||[]).map(c=>({
+      id:c.id, name:c.name, lang:c.lang, text:c.body,
+      votes:c.votes||0, voted:votes['rc_'+c.id]||false,
+      replies:(c.replies||[]).map(r=>({id:r.id,name:r.name,lang:r.lang||'OTHER',text:r.body,ts:new Date(r.created_at).getTime()})),
+      showReplies:false, ts:new Date(c.created_at).getTime()
+    }));
+    renderResultComments();
+  }catch(e){ console.error(e); }
+}
+
+function renderResultComments(){
+  const list=document.getElementById('resultCommentList');
+  const comments=resultComments[currentAnalysisId]||[];
+  if(!comments.length){
+    list.innerHTML='<div class="empty-state" style="padding:1.5rem 0"><p>아직 의견이 없어요. 첫 번째로 남겨보세요!</p></div>';
+    return;
+  }
+  list.innerHTML=comments.map((c,i)=>commentHTML(c,i,'rc')).join('');
+}
+
+function commentHTML(c,i,prefix){
+  const m=LANG_META[c.lang]||LANG_META['EN'];
+  const av=AV_COLORS[i%AV_COLORS.length];
+  const initials=c.name.slice(0,2).toUpperCase();
+  const repliesHTML=c.showReplies?(c.replies||[]).map(r=>{
+    const rm=LANG_META[r.lang]||LANG_META['EN'];
+    return`<div class="reply-box">
+      <div class="reply-header">
+        <div class="avatar" style="background:${AV_COLORS[0]};color:#fff;width:24px;height:24px;font-size:10px">${(r.name||'익명').slice(0,2).toUpperCase()}</div>
+        <span style="font-size:13px;font-weight:500;color:var(--text)">${r.name||'익명'}</span>
+        <span style="font-size:11px;padding:2px 6px;border-radius:20px;background:${rm.bg};color:${rm.color}">${rm.flag} ${rm.label}</span>
+      </div>
+      <div class="reply-body">${r.text}</div>
+    </div>`;
+  }).join(''):'';
+  const tagBadge=c.tag?`<span style="font-size:11px;padding:2px 7px;border-radius:20px;background:var(--accent-bg);color:var(--accent2)">${c.tag}</span>`:'';
+  const shareText=encodeURIComponent(`[Localize 커뮤니티] ${c.name} (${m.label}): "${c.text.slice(0,80)}${c.text.length>80?'…':''}" — ${window.location.href}`);
+  return`<div class="comment-box" id="cmt-${prefix}-${c.id}">
+    <div class="comment-header">
+      <div class="avatar" style="background:${av};color:#fff">${initials}</div>
+      <span class="comment-name">${c.name}</span>
+      <span class="comment-lang-badge" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</span>
+      ${tagBadge}
+      <span class="comment-time">${timeAgo(c.ts)}</span>
+    </div>
+    <div class="comment-body">${c.text}</div>
+    <div class="comment-actions">
+      <button class="vote-btn${c.voted?' voted':''}" onclick="voteComment('${prefix}',${c.id})">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4 11 4.5 8.5 7l.6 3.5L6 9 2.9 10.5l.6-3.5L1 4.5 4.5 4z" stroke="currentColor" stroke-width="1" stroke-linejoin="round" fill="${c.voted?'currentColor':'none'}"/></svg>
+        ${c.votes}
+      </button>
+      <button class="reply-toggle" onclick="toggleReplyInput('${prefix}',${c.id})">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3h10v6H1z" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M4 6h4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+        답글 ${c.replies&&c.replies.length?`(${c.replies.length})`:''}
+      </button>
+      ${c.replies&&c.replies.length?`<button class="reply-toggle" onclick="toggleShowReplies('${prefix}',${c.id})">${c.showReplies?'접기':'댓글 보기'}</button>`:''}
+      <button class="reply-toggle" onclick="sharePost(decodeURIComponent('${shareText}'))" title="공유">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M9 1l2 2-2 2M11 3H5C3.3 3 2 4.3 2 6v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        공유
+      </button>
+    </div>
+    <div class="reply-input-wrap" id="ri-${prefix}-${c.id}">
+      <input type="text" placeholder="답글 작성..." id="rt-${prefix}-${c.id}">
+      <button class="reply-submit" onclick="submitReply('${prefix}',${c.id})">등록</button>
+    </div>
+    ${c.showReplies?`<div class="reply-thread">${repliesHTML}</div>`:''}
+  </div>`;
+}
+
+function voteComment(prefix,id){
+  const voteKey=`${prefix}_${id}`;
+  const voted=!votes[voteKey];
+  votes[voteKey]=voted;
+  // optimistic UI
+  if(prefix==='rc'){
+    const c=(resultComments[currentAnalysisId]||[]).find(x=>x.id===id);
+    if(c){c.voted=voted;c.votes+=voted?1:-1;renderResultComments();}
+    sb.from('result_comments').update({votes:voted?supabase.raw('votes+1'):supabase.raw('votes-1')}).eq('id',id).then(()=>{});
+  } else if(prefix==='comm'){
+    const c=communityPosts.find(x=>x.id===id);
+    if(c){c.voted=voted;c.votes+=voted?1:-1;renderCommunity();}
+    sb.from('community_posts').update({votes:voted?supabase.raw('votes+1'):supabase.raw('votes-1')}).eq('id',id).then(()=>{});
+  }
+}
+
+function toggleReplyInput(prefix,id){
+  const el=document.getElementById(`ri-${prefix}-${id}`);
+  if(el)el.classList.toggle('show');
+}
+
+function toggleShowReplies(prefix,id){
+  if(prefix==='rc'){
+    const c=(resultComments[currentAnalysisId]||[]).find(x=>x.id===id);
+    if(c){c.showReplies=!c.showReplies;renderResultComments();}
+  } else if(prefix==='comm'){
+    const c=communityPosts.find(x=>x.id===id);
+    if(c){c.showReplies=!c.showReplies;renderCommunity();}
+  }
+}
+
+async function submitReply(prefix,id){
+  const input=document.getElementById(`rt-${prefix}-${id}`);
+  const text=input?.value.trim();
+  if(!text)return;
+  try{
+    if(prefix==='rc'){
+      await sb.from('result_replies').insert({comment_id:id,name:'익명',body:text});
+      await loadResultComments(currentAnalysisId);
+    } else if(prefix==='comm'){
+      await sb.from('community_replies').insert({post_id:id,name:'익명',body:text});
+      await loadCommunity();
+    }
+    showToast('답글이 등록되었습니다 ✓');
+  }catch(e){ showToast('오류: '+e.message); }
+}
+
+// ── COMMUNITY ────────────────────────────────────────────────────────
+async function submitCommunityPost(){
+  const name=document.getElementById('comm_name').value.trim()||'익명';
+  const lang=document.getElementById('comm_lang').value;
+  const text=document.getElementById('comm_text').value.trim();
+  const tag=document.getElementById('comm_tag').value;
+  if(!text){showToast('내용을 입력해 주세요');return;}
+  try{
+    await sb.from('community_posts').insert({name,lang,body:text,tag});
+    document.getElementById('comm_text').value='';
+    await loadCommunity();
+    showToast('글이 등록되었습니다 ✓');
+  }catch(e){ showToast('오류: '+e.message); }
+}
+
+async function loadCommunity(){
+  try{
+    let q=sb.from('community_posts')
+      .select('*, replies:community_replies(*)')
+      .order('created_at',{ascending:false});
+    if(currentCommFilter!=='all') q=q.eq('lang',currentCommFilter.toUpperCase());
+    const {data}=await q;
+    communityPosts=(data||[]).map(p=>({
+      id:p.id, name:p.name, lang:p.lang, text:p.body, tag:p.tag,
+      votes:p.votes||0, voted:votes['comm_'+p.id]||false,
+      replies:(p.replies||[]).map(r=>({id:r.id,name:r.name,lang:'OTHER',text:r.body,ts:new Date(r.created_at).getTime()})),
+      showReplies:false, ts:new Date(p.created_at).getTime()
+    }));
+    renderCommunity();
+  }catch(e){ console.error(e); }
+}
+
+function switchCommTab(filter){
+  currentCommFilter=filter;
+  document.querySelectorAll('.comm-tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  loadCommunity();
+}
+
+function renderCommunity(){
+  const list=document.getElementById('communityList');
+  if(!communityPosts.length){
+    list.innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17" stroke="currentColor" stroke-width="1.2"/><path d="M14 20h12M14 14h12M14 26h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><p>아직 글이 없어요. 첫 번째로 작성해 보세요!</p></div>';
+    return;
+  }
+  list.innerHTML=communityPosts.map((p,i)=>commentHTML(p,i,'comm')).join('');
+}
+
+// ── REPORTS ──────────────────────────────────────────────────────────
+function openReportModal(){document.getElementById('reportModal').classList.add('open');}
+function closeReportModal(){document.getElementById('reportModal').classList.remove('open');}
+
+async function submitReport(){
+  const phrase=document.getElementById('rep_phrase').value.trim();
+  const reason=document.getElementById('rep_reason').value.trim();
+  if(!phrase||!reason){showToast('어색한 문구와 이유를 입력해 주세요');return;}
+  try{
+    await sb.from('reports').insert({
+      phrase,
+      original_phrase:document.getElementById('rep_original').value.trim()||null,
+      lang:document.getElementById('rep_lang').value,
+      source_title:document.getElementById('rep_source').value.trim()||null,
+      reason,
+      suggestion:document.getElementById('rep_suggestion').value.trim()||null,
+      reporter_name:document.getElementById('rep_name').value.trim()||'익명',
+      issue_type:document.getElementById('rep_issue').value
+    });
+    closeReportModal();
+    ['rep_phrase','rep_original','rep_source','rep_reason','rep_suggestion','rep_name'].forEach(id=>document.getElementById(id).value='');
+    await loadReports();
+    showToast('제보가 등록되었습니다 ✓');
+    updateBadge();
+  }catch(e){ showToast('오류: '+e.message); }
+}
+
+async function loadReports(){
+  try{
+    let q=sb.from('reports')
+      .select('*, comments:report_comments(*)')
+      .order('created_at',{ascending:false});
+    if(currentReportFilter!=='all') q=q.eq('lang',currentReportFilter);
+    const {data}=await q;
+    reports=(data||[]).map(r=>({
+      id:r.id, phrase:r.phrase, original:r.original_phrase,
+      lang:r.lang, source:r.source_title, reason:r.reason,
+      suggestion:r.suggestion, name:r.reporter_name, issue:r.issue_type,
+      votes:r.votes||0, voted:votes['rep_'+r.id]||false,
+      comments:(r.comments||[]).map(c=>({id:c.id,name:c.name,lang:c.lang||'OTHER',text:c.body,ts:new Date(c.created_at).getTime()})),
+      showComments:false, ts:new Date(r.created_at).getTime()
+    }));
+    renderReports();
+  }catch(e){ console.error(e); }
+}
+
+function filterReports(filter,el){
+  currentReportFilter=filter;
+  document.querySelectorAll('#reportTagFilter .tag-filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  loadReports();
+}
+
+function voteReport(id){
+  const voteKey='rep_'+id;
+  const voted=!votes[voteKey];
+  votes[voteKey]=voted;
+  const r=reports.find(x=>x.id===id);
+  if(r){r.voted=voted;r.votes+=voted?1:-1;renderReports();}
+  sb.from('reports').update({votes:r?r.votes:0}).eq('id',id).then(()=>{});
+}
+
+function toggleRepComments(id){
+  const r=reports.find(x=>x.id===id);
+  if(!r)return;
+  r.showComments=!r.showComments;
+  renderReports();
+}
+
+async function submitRepComment(id){
+  const input=document.getElementById(`rep-cm-${id}`);
+  const text=input?.value.trim();
+  if(!text)return;
+  try{
+    await sb.from('report_comments').insert({report_id:id,name:'익명',lang:'OTHER',body:text});
+    await loadReports();
+    showToast('댓글이 등록되었습니다 ✓');
+  }catch(e){ showToast('오류: '+e.message); }
+}
+
+// ── HISTORY ──────────────────────────────────────────────────────────
+async function loadHistory(){
+  try{
+    const {data}=await sb.from('analyses')
+      .select('id,phrase,src_lang,target_langs,created_at')
+      .order('created_at',{ascending:false})
+      .limit(8);
+    analysisHistory=(data||[]).map(d=>({
+      id:d.id, text:d.phrase, src:d.src_lang,
+      langs:d.target_langs||[], time:timeAgo(new Date(d.created_at).getTime())
+    }));
+    renderHistory();
+  }catch(e){ console.error(e); }
+}
+
+function renderReports(){
+  const grid=document.getElementById('reportGrid');
+  let reps=reports;
+  if(!reps.length){
+    grid.innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17" stroke="currentColor" stroke-width="1.2"/><path d="M20 13v10M20 26v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><p>아직 제보된 번역이 없어요.<br>어색한 번역을 발견하면 제보해 주세요!</p></div>';
+    return;
+  }
+  grid.innerHTML=reps.map(r=>{
+    const m=LANG_META[r.lang]||LANG_META['EN'];
+    const commentsHTML=r.showComments?(r.comments||[]).map(c=>{
+      const cm=LANG_META[c.lang]||LANG_META['EN'];
+      return`<div class="comment-box" style="margin-bottom:8px">
+        <div class="comment-header">
+          <div class="avatar" style="background:${AV_COLORS[0]};color:#fff;width:28px;height:28px;font-size:11px">${(c.name||'익').slice(0,2).toUpperCase()}</div>
+          <span class="comment-name">${c.name||'익명'}</span>
+          <span class="comment-lang-badge" style="background:${cm.bg};color:${cm.color}">${cm.flag}</span>
+          <span class="comment-time">${timeAgo(c.ts)}</span>
+        </div>
+        <div class="comment-body">${c.text}</div>
+      </div>`;
+    }).join(''):'';
+    const addForm=r.showComments?`<div style="display:flex;gap:8px;margin-top:8px">
+      <input type="text" id="rep-cm-${r.id}" placeholder="이 번역에 대한 의견..." style="flex:1;font-size:13px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);outline:none">
+      <button class="reply-submit" onclick="submitRepComment('${r.id}')">등록</button>
+    </div>`:'';
+    return`<div class="report-card" id="rep-${r.id}">
+      <div class="report-header"><div>
+        <div class="report-phrase">"${r.phrase}"</div>
+        ${r.original?`<div class="report-original">원문: "${r.original}"</div>`:''}
+      </div></div>
+      <div class="report-meta">
+        <span class="report-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</span>
+        <span class="report-tag report-issue-tag">${r.issue}</span>
+        ${r.source?`<span class="report-tag">📌 ${r.source}</span>`:''}
+      </div>
+      <div class="report-body">${r.reason}</div>
+      ${r.suggestion?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:var(--text2);margin-bottom:10px">💡 제안: <strong style="color:var(--text)">${r.suggestion}</strong></div>`:''}
+      <div class="report-actions">
+        <button class="vote-btn${r.voted?' voted':''}" onclick="voteReport('${r.id}')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4 11 4.5 8.5 7l.6 3.5L6 9 2.9 10.5l.6-3.5L1 4.5 4.5 4z" stroke="currentColor" stroke-width="1" stroke-linejoin="round" fill="${r.voted?'currentColor':'none'}"/></svg>
+          공감 ${r.votes}
+        </button>
+        <button class="expand-btn" onclick="toggleRepComments('${r.id}')">${r.showComments?'댓글 숨기기':'댓글 '+((r.comments||[]).length?`(${r.comments.length})`:'달기')}</button>
+        <button class="expand-btn" onclick="sharePost('[Localize 제보] &quot;${r.phrase.slice(0,40)}&quot; — '+window.location.href)">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M9 1l2 2-2 2M11 3H5C3.3 3 2 4.3 2 6v2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          공유
+        </button>
+        <div class="report-comment-count">${timeAgo(r.ts)}</div>
+      </div>
+      <div class="expanded-comments${r.showComments?' open':''}" id="repcm-${r.id}">${commentsHTML}${addForm}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory(){
+  const list=document.getElementById('historyList');
+  if(!analysisHistory.length){
+    list.innerHTML='<div class="empty-state" style="padding:1.5rem 0"><p style="font-size:13px">아직 분석한 문구가 없어요</p></div>';
+    return;
+  }
+  list.innerHTML=analysisHistory.slice(0,6).map(h=>`<div class="history-item" onclick="loadHistory('${h.id}')">
+    <div class="history-phrase">${h.text}</div>
+    <div class="history-time">${h.time}</div>
+  </div>`).join('');
+}
+
+function loadHistory(id){
+  const h=analysisHistory.find(x=>x.id===id);
+  if(!h)return;
+  document.getElementById('inputText').value=h.text;
+  showToast('불러왔습니다. 분석을 다시 실행해 주세요.');
+}
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function updateBadge(){
+  const total=analysisHistory.length;
+  document.getElementById('totalBadge').textContent=`${total}개 분석`;
+}
+
+function shareResult(){
+  const text=document.getElementById('inputText').value.trim();
+  if(!text)return;
+  sharePost(`[Localize] "${text}" 분석 결과 — ${window.location.href}`);
+}
+
+function sharePost(text){
+  const msg=typeof text==='string'?text:String(text);
+  if(navigator.share){
+    navigator.share({title:'Localize',text:msg}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(msg);
+    showToast('링크가 클립보드에 복사되었습니다 📋');
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=msg;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    showToast('링크가 클립보드에 복사되었습니다 📋');
+  }
+}
+
+function timeAgo(ts){
+  if(!ts)return'방금 전';
+  const diff=Date.now()-ts;
+  if(diff<60000)return'방금 전';
+  if(diff<3600000)return`${Math.floor(diff/60000)}분 전`;
+  if(diff<86400000)return`${Math.floor(diff/3600000)}시간 전`;
+  return`${Math.floor(diff/86400000)}일 전`;
+}
+
+let toastTimer;
+function showToast(msg){
+  const existing=document.querySelector('.toast');
+  if(existing)existing.remove();
+  clearTimeout(toastTimer);
+  const el=document.createElement('div');
+  el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);
+  toastTimer=setTimeout(()=>el.remove(),2500);
+}
+
+// close modal on overlay click
+document.getElementById('reportModal').addEventListener('click',function(e){
+  if(e.target===this)closeReportModal();
+});
+</script>
+</body>
+</html>
+HTMLEOF
