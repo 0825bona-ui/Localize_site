@@ -13,22 +13,38 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
+    // 새 Gemini API 키 형식(AQ.으로 시작)은 v1beta + Bearer 인증 사용
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'x-goog-api-key': apiKey,
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+            responseMimeType: 'text/plain',
+          }
         }),
       }
     );
+
     const data = await response.json();
-    // Gemini 응답을 Claude 형식처럼 맞춰서 반환
+
+    if (!response.ok) {
+      console.error('Gemini error:', JSON.stringify(data));
+      return res.status(500).json({ error: data?.error?.message || 'Gemini API error' });
+    }
+
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     return res.status(200).json({ content: [{ text }] });
   } catch (error) {
+    console.error('Handler error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
