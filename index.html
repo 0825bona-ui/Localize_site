@@ -775,7 +775,7 @@ JSON만 출력. 다른 텍스트, 마크다운 없이.`;
   }catch(e){
     document.getElementById(`rc-${lang}`).innerHTML=`
       <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
-      <div style="font-size:13px;color:var(--danger);padding:8px 0">분석 오류가 발생했습니다. 다시 시도해 주세요.</div>`;
+      <div style="font-size:11px;color:var(--danger);padding:8px 0;word-break:break-all">오류: ${e.message}</div>`;
     document.getElementById(`rc-${lang}`).classList.remove('loading');
   }
 }
