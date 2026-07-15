@@ -19,14 +19,23 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'mistralai/mistral-7b-instruct:free',
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 1000,
       }),
     });
+
     const data = await response.json();
-    let text = data?.choices?.[0]?.message?.content || '';
-    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    // OpenRouter가 에러를 반환한 경우 감지
+    if (!response.ok || data.error) {
+      const errMsg = data?.error?.message || `OpenRouter error (${response.status})`;
+      return res.status(502).json({ error: errMsg });
+    }
+
+    const text = data?.choices?.[0]?.message?.content || '';
+    if (!text) return res.status(502).json({ error: '모델 응답이 비었습니다.' });
+
     return res.status(200).json({ content: [{ text }] });
   } catch (error) {
     return res.status(500).json({ error: error.message });
