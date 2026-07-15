@@ -748,6 +748,7 @@ async function runAnalysis(){
 
   for(const lang of langs){
     await fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia);
+    await new Promise(r=>setTimeout(r,1500));
   }
 
   // save to Supabase
