@@ -698,8 +698,10 @@ async function runAnalysis(){
     </div>`;
   });
 
-  // parallel API calls
-  await Promise.all(langs.map(lang=>fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia)));
+  // sequential API calls (동시에 쏘면 무료 모델 레이트리밋에 걸려 전부 실패하므로 하나씩 순서대로 진행)
+  for (const lang of langs) {
+    await fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia);
+  }
 
   // save to Supabase
   try {
@@ -724,7 +726,7 @@ async function runAnalysis(){
   document.getElementById('commentsWrap').style.display='block';
 }
 
-async function fetchLangAnalysis(lang,text,srcMeta,source,context,media){
+async function fetchLangAnalysis(lang,text,srcMeta,source,context,media,isRetry){
   const m=LANG_META[lang];
   const contextPart=[];
   if(media)contextPart.push(`매체 유형: ${media}`);
@@ -755,8 +757,21 @@ JSON만 출력. 다른 텍스트, 마크다운 없이.`;
       body:JSON.stringify({prompt})
     });
     const data=await res.json();
+
+    if(!res.ok || data?.error){
+      throw new Error(data?.error || `요청 실패 (status ${res.status})`);
+    }
+
     const raw = data?.content ? data.content.map(i=>i.text||'').join('') : (data?.choices?.[0]?.message?.content || '');
-    const clean=raw.replace(/```json|```/g,'').trim();
+    let clean=raw.replace(/```json|```/g,'').trim();
+    if(!clean){
+      throw new Error('빈 응답을 받았습니다.');
+    }
+    const firstBrace=clean.indexOf('{');
+    const lastBrace=clean.lastIndexOf('}');
+    if(firstBrace!==-1 && lastBrace!==-1 && lastBrace>firstBrace){
+      clean=clean.slice(firstBrace,lastBrace+1);
+    }
     const p=JSON.parse(clean);
     const keywords=(p.keyword||'').split(',').map(k=>`<div class="keyword">${k.trim()}</div>`).join('');
     document.getElementById(`rc-${lang}`).innerHTML=`
@@ -773,12 +788,35 @@ JSON만 출력. 다른 텍스트, 마크다운 없이.`;
       <div class="cultural-text">${p.cultural}</div>`;
     document.getElementById(`rc-${lang}`).classList.remove('loading');
   }catch(e){
+    // 서버가 이미 5번 재시도했지만 그래도 실패한 경우 → 클라이언트에서 한 번 더 처음부터 시도
+    if(!isRetry){
+      await new Promise(r=>setTimeout(r,1000));
+      return fetchLangAnalysis(lang,text,srcMeta,source,context,media,true);
+    }
+    // 그래도 실패하면 재시도 버튼 제공 (기술적 에러 문구 대신)
+    document.getElementById(`rc-${lang}`).classList.add('loading');
     document.getElementById(`rc-${lang}`).innerHTML=`
       <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
-      <div style="font-size:11px;color:var(--danger);padding:8px 0;word-break:break-all">오류: ${e.message}</div>`;
-    document.getElementById(`rc-${lang}`).classList.remove('loading');
+      <div style="font-size:13px;color:var(--text2);padding:12px 0;text-align:center">
+        <div style="margin-bottom:10px">지금 분석 서버가 붐벼요.</div>
+        <button class="btn-secondary" onclick="retrySingleLang('${lang}')">다시 시도</button>
+      </div>`;
   }
 }
+
+function retrySingleLang(lang){
+  const text=document.getElementById('inputText').value.trim();
+  const srcMeta=LANG_META[selectedSrc];
+  const source=document.getElementById('inputSource')?.value.trim()||'';
+  const context=document.getElementById('inputContext')?.value.trim()||'';
+  document.getElementById(`rc-${lang}`).classList.add('loading');
+  document.getElementById(`rc-${lang}`).innerHTML=`
+    <div class="result-lang-tag" style="background:${LANG_META[lang].bg};color:${LANG_META[lang].color}">${LANG_META[lang].flag} ${LANG_META[lang].label}</div>
+    <div class="loading-pulse"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>분석 중...</span></div>`;
+  fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia);
+}
+
+
 
 // ── RESULT COMMENTS ─────────────────────────────────────────────────
 async function submitResultComment(){
