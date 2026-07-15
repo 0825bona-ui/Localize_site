@@ -140,7 +140,7 @@ select option{background:var(--bg3)}
 .tone-line{font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
 .keywords{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
 .keyword{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg4);color:var(--text2)}
-.cultural-text{font-size:13px;color:var(--text2);line-height:1.75;border-top:1px solid var(--border);padding-top:10px;word-break:keep-all}
+.cultural-text{font-size:13px;color:var(--text2);line-height:1.75;border-top:1px solid var(--border);padding-top:10px;word-break:break-all;overflow-wrap:break-word}
 .loading-pulse{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:13px;padding:8px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
 .dot:nth-child(2){animation-delay:.2s}
@@ -785,7 +785,7 @@ ${contextPart.join('\n')}`:'';
     + '- localized: 가장 자연스럽고 설득력 있는 로컬라이징 문구\n'
     + '- strategy: 직역/의역/문화적변형/원문유지 중 정확히 하나\n'
     + '- tone: 어조 변화를 한 줄로 (예: 명령형→철학적 선언)\n'
-    + '- cultural: 해당 언어권의 문화적 분석 3문장\n'
+    + '- cultural: 해당 언어권의 문화적 분석 3문장 (반드시 한국어로 작성)\n'
     + '- keyword: 핵심 변화 키워드 3개 (쉼표 구분)\n\n'
     + 'JSON만 출력. 다른 텍스트, 마크다운 없이.';
 
