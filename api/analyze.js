@@ -1,11 +1,10 @@
 export const maxDuration = 60;
 
-// 안정성 순서로 나열 — 앞 모델이 실패하면 자동으로 다음 모델 시도
+// openrouter/free = OpenRouter 공식 자동 라우터 (살아있는 무료 모델 자동 선택, 2026.02 출시)
+// 특정 모델이 죽어도 자동으로 다른 모델로 넘어가므로 가장 안정적
 const MODEL_FALLBACKS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'qwen/qwen3-8b:free',
-  'google/gemma-3-27b-it:free',
-  'mistralai/mistral-small-3.2-24b-instruct:free',
+  'openrouter/free',                         // 1순위: 자동 라우터 (항상 살아있는 모델 선택)
+  'meta-llama/llama-3.3-70b-instruct:free',  // 2순위: 가장 안정적인 무료 고정 모델
 ];
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -25,11 +24,11 @@ async function tryModel(apiKey, model, prompt) {
         messages: [
           {
             role: 'system',
-            content: '당신은 로컬라이징 전문가입니다. 반드시 완전한 JSON만 출력하세요. 마크다운 없이. 절대 JSON을 중간에 자르지 마세요.'
+            content: '당신은 로컬라이징 전문가입니다. 반드시 완전한 JSON만 출력하세요. 마크다운 없이. 절대 JSON을 중간에 자르지 마세요.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
-        max_tokens: 1500,
+        max_tokens: 2500,
         temperature: 0.7,
       }),
     });
@@ -75,14 +74,8 @@ export default async function handler(req, res) {
 
   for (const model of MODEL_FALLBACKS) {
     const result = await tryModel(apiKey, model, prompt);
-
-    if (result.ok) {
-      return res.status(200).json({ content: [{ text: result.text }] });
-    }
-
-    // 레이트리밋이면 잠깐 대기 후 다음 모델
-    if (result.reason === 'rate_limited') await sleep(1500);
-    // 그 외 에러는 즉시 다음 모델로
+    if (result.ok) return res.status(200).json({ content: [{ text: result.text }] });
+    if (result.reason === 'rate_limited') await sleep(2000);
   }
 
   return res.status(502).json({ error: '일시적으로 AI 서버가 응답하지 않아요. 잠시 후 다시 시도해 주세요.' });
