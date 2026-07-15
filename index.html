@@ -724,6 +724,77 @@ async function runAnalysis(){
   document.getElementById('commentsWrap').style.display='block';
 }
 
+// 서버 응답을 안전하게 읽고 JSON으로 파싱한다.
+// "Unexpected EOF" 오류는 대부분 응답 바디가 비어있거나(타임아웃 등으로 잘림)
+// 모델 출력이 도중에 끊겨서 JSON이 미완성인 경우 발생한다.
+// 아래 함수는 그런 경우를 감지해 최대 2회까지 재시도하고,
+// 그래도 안되면 알아볼 수 있는 오류 메시지를 던진다.
+async function callAnalyzeAPI(prompt, attempt=1){
+  const MAX_ATTEMPTS=2;
+  let res;
+  try{
+    res=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+  }catch(networkErr){
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인해 주세요.');
+  }
+
+  const bodyText=await res.text();
+
+  if(!res.ok){
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error(`서버 오류 (${res.status}). 잠시 후 다시 시도해 주세요.`);
+  }
+
+  if(!bodyText || !bodyText.trim()){
+    // 응답 바디가 완전히 비어있음 — 서버 타임아웃/중단 가능성
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error('서버 응답이 비어 있습니다. 잠시 후 다시 시도해 주세요.');
+  }
+
+  let data;
+  try{
+    data=JSON.parse(bodyText);
+  }catch(e){
+    // 서버 응답 자체가 잘려서(EOF) JSON이 아닌 경우 재시도
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error('서버 응답이 올바른 JSON 형식이 아닙니다.');
+  }
+
+  if(!data || !Array.isArray(data.content)){
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error('서버 응답 형식이 예상과 다릅니다.');
+  }
+
+  const raw=data.content.map(i=>i.text||'').join('');
+  let clean=raw.replace(/```json|```/g,'').trim();
+
+  if(!clean){
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error('모델 응답이 비어 있습니다.');
+  }
+
+  try{
+    return JSON.parse(clean);
+  }catch(e){
+    // 모델 출력이 중간에 잘려 중괄호가 닫히지 않은 경우,
+    // 첫 '{' 부터 마지막 '}' 까지만 추출해서 다시 시도
+    const start=clean.indexOf('{');
+    const end=clean.lastIndexOf('}');
+    if(start!==-1 && end!==-1 && end>start){
+      try{
+        return JSON.parse(clean.slice(start,end+1));
+      }catch(e2){/* fall through */}
+    }
+    if(attempt<MAX_ATTEMPTS) return callAnalyzeAPI(prompt, attempt+1);
+    throw new Error('모델 응답이 잘려서 분석을 완료하지 못했습니다. 다시 시도해 주세요.');
+  }
+}
+
 async function fetchLangAnalysis(lang,text,srcMeta,source,context,media){
   const m=LANG_META[lang];
   const contextPart=[];
@@ -749,15 +820,7 @@ async function fetchLangAnalysis(lang,text,srcMeta,source,context,media){
 JSON만 출력. 다른 텍스트, 마크다운 없이.`;
 
   try{
-    const res=await fetch('/api/analyze',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt})
-    });
-    const data=await res.json();
-    const raw=data.content.map(i=>i.text||'').join('');
-    const clean=raw.replace(/```json|```/g,'').trim();
-    const p=JSON.parse(clean);
+    const p=await callAnalyzeAPI(prompt);
     const keywords=(p.keyword||'').split(',').map(k=>`<div class="keyword">${k.trim()}</div>`).join('');
     document.getElementById(`rc-${lang}`).innerHTML=`
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
