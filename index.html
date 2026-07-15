@@ -613,8 +613,56 @@ async function init(){
   setSrcDefault();
   await Promise.all([loadHistory(), loadCommunity(), loadReports()]);
   updateBadge();
+  // URL에 ?id= 가 있으면 해당 분석을 불러와서 자동 실행
+  const urlId = new URLSearchParams(location.search).get('id');
+  if(urlId) await loadAndRunAnalysis(urlId);
 }
 init();
+
+// URL 공유 링크로 접근했을 때: Supabase에서 분석 정보 불러와 자동 실행
+async function loadAndRunAnalysis(id){
+  try{
+    const {data,error} = await sb.from('analyses')
+      .select('phrase,src_lang,target_langs,source_title,source_media,context')
+      .eq('id', id)
+      .single();
+    if(error || !data){ showToast('분석 정보를 불러오지 못했습니다.'); return; }
+
+    // 폼 채우기
+    document.getElementById('inputText').value = data.phrase || '';
+    document.getElementById('inputSource').value = data.source_title || '';
+    document.getElementById('inputContext').value = data.context || '';
+
+    // 원문 언어 설정
+    if(data.src_lang){
+      selectedSrc = data.src_lang;
+      document.querySelectorAll('#srcPills .lang-pill').forEach(p => p.className='lang-pill');
+      const srcPill = document.querySelector(`#srcPills .lang-pill[data-src="${data.src_lang}"]`);
+      if(srcPill && LANG_META[data.src_lang]) srcPill.classList.add(LANG_META[data.src_lang].acv);
+    }
+
+    // 목표 언어 설정
+    if(data.target_langs && data.target_langs.length){
+      selectedTargets = new Set(data.target_langs);
+      document.querySelectorAll('#targetPills .lang-pill').forEach(p => {
+        const code = p.dataset.lang;
+        p.className = 'lang-pill';
+        if(selectedTargets.has(code) && LANG_META[code]) p.classList.add(LANG_META[code].acv);
+      });
+    }
+
+    // 매체 칩 설정
+    if(data.source_media){
+      selectedMedia = data.source_media;
+      document.querySelectorAll('.media-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.media === data.source_media);
+      });
+    }
+
+    showToast(`"${data.phrase.slice(0,30)}${data.phrase.length>30?'…':''}" 분석을 불러왔어요`);
+    await runAnalysis();
+  } catch(e){ showToast('불러오기 오류: '+e.message); }
+}
 
 function setSrcDefault(){
   const first=document.querySelector('#srcPills .lang-pill[data-src="EN"]');
@@ -1130,8 +1178,8 @@ function renderHistory(){
     list.innerHTML='<div class="empty-state" style="padding:1.5rem 0"><p style="font-size:13px">아직 분석한 문구가 없어요</p></div>';
     return;
   }
-  list.innerHTML=analysisHistory.map(h=>`<div class="history-item" onclick="loadHistory_item('${h.id}')">
-    <div>
+  list.innerHTML=analysisHistory.slice(0,10).map(h=>`<div class="history-item" onclick="loadHistory_item('${h.id}')">
+    <div style="flex:1;min-width:0">
       <div class="history-phrase">${h.text}</div>
       <div class="history-langs">${(h.langs||[]).map(l=>LANG_META[l]?LANG_META[l].flag:'').join(' ')}</div>
     </div>
@@ -1139,12 +1187,42 @@ function renderHistory(){
   </div>`).join('');
 }
 
-function loadHistory_item(id){
+async function loadHistory_item(id){
   const h=analysisHistory.find(x=>x.id===id);
   if(!h)return;
-  document.getElementById('inputText').value=h.text;
-  showToast('불러왔습니다. 분석을 다시 실행해 주세요.');
+  // 폼 채우기
+  document.getElementById('inputText').value = h.text;
+  document.getElementById('inputSource').value = h.source || '';
+  document.getElementById('inputContext').value = h.context || '';
+
+  // 원문 언어
+  if(h.src){
+    selectedSrc = h.src;
+    document.querySelectorAll('#srcPills .lang-pill').forEach(p => p.className='lang-pill');
+    const srcPill = document.querySelector(`#srcPills .lang-pill[data-src="${h.src}"]`);
+    if(srcPill && LANG_META[h.src]) srcPill.classList.add(LANG_META[h.src].acv);
+  }
+
+  // 목표 언어
+  if(h.langs && h.langs.length){
+    selectedTargets = new Set(h.langs);
+    document.querySelectorAll('#targetPills .lang-pill').forEach(p => {
+      const code = p.dataset.lang;
+      p.className = 'lang-pill';
+      if(selectedTargets.has(code) && LANG_META[code]) p.classList.add(LANG_META[code].acv);
+    });
+  }
+
+  // 매체
+  if(h.media){
+    selectedMedia = h.media;
+    document.querySelectorAll('.media-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.media === h.media);
+    });
+  }
+
   window.scrollTo({top:0,behavior:'smooth'});
+  await runAnalysis();
 }
 
 function renderReports(){
@@ -1201,24 +1279,6 @@ function renderReports(){
   }).join('');
 }
 
-function renderHistory(){
-  const list=document.getElementById('historyList');
-  if(!analysisHistory.length){
-    list.innerHTML='<div class="empty-state" style="padding:1.5rem 0"><p style="font-size:13px">아직 분석한 문구가 없어요</p></div>';
-    return;
-  }
-  list.innerHTML=analysisHistory.slice(0,6).map(h=>`<div class="history-item" onclick="loadHistory('${h.id}')">
-    <div class="history-phrase">${h.text}</div>
-    <div class="history-time">${h.time}</div>
-  </div>`).join('');
-}
-
-function loadHistory(id){
-  const h=analysisHistory.find(x=>x.id===id);
-  if(!h)return;
-  document.getElementById('inputText').value=h.text;
-  showToast('불러왔습니다. 분석을 다시 실행해 주세요.');
-}
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
@@ -1232,9 +1292,21 @@ function updateBadge(){
 }
 
 function shareResult(){
+  if(!currentAnalysisId){ showToast('분석을 먼저 실행해 주세요'); return; }
   const text=document.getElementById('inputText').value.trim();
-  if(!text)return;
-  sharePost(`[Localize] "${text}" 분석 결과 — ${window.location.href}`);
+  const url = `${location.origin}${location.pathname}?id=${currentAnalysisId}`;
+  if(navigator.share){
+    navigator.share({title:`Localize — "${text.slice(0,30)}"`, url}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(url);
+    showToast('공유 링크가 복사되었습니다 📋');
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('공유 링크가 복사되었습니다 📋');
+  }
 }
 
 function sharePost(text){
@@ -1280,4 +1352,3 @@ document.getElementById('reportModal').addEventListener('click',function(e){
 </script>
 </body>
 </html>
-HTMLEOF
