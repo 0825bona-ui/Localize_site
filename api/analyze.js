@@ -1,10 +1,16 @@
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+export const maxDuration = 60;
 
-// 한 번 OpenRouter 호출. 결과 상태를 세분화해서 반환:
-// { status: 'ok', text } | { status: 'rate_limited' } | { status: 'retryable' } | { status: 'fatal', error }
-async function callOpenRouter(apiKey, prompt, maxTokens) {
+// 안정성 순서로 나열 — 앞 모델이 실패하면 자동으로 다음 모델 시도
+const MODEL_FALLBACKS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen3-8b:free',
+  'google/gemma-3-27b-it:free',
+  'mistralai/mistral-small-3.2-24b-instruct:free',
+];
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function tryModel(apiKey, model, prompt) {
   let response;
   try {
     response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -15,7 +21,7 @@ async function callOpenRouter(apiKey, prompt, maxTokens) {
         'HTTP-Referer': 'https://localize-site.vercel.app',
       },
       body: JSON.stringify({
-        model: 'google/gemma-3-12b-it:free',
+        model,
         messages: [
           {
             role: 'system',
@@ -23,55 +29,35 @@ async function callOpenRouter(apiKey, prompt, maxTokens) {
           },
           { role: 'user', content: prompt }
         ],
-        max_tokens: maxTokens,
+        max_tokens: 1500,
         temperature: 0.7,
       }),
     });
-  } catch (networkErr) {
-    return { status: 'retryable' };
+  } catch {
+    return { ok: false, reason: 'network' };
   }
 
-  // 레이트리밋: 429 상태코드 또는 응답 헤더로 판단
-  if (response.status === 429) {
-    return { status: 'rate_limited' };
-  }
+  if (response.status === 429) return { ok: false, reason: 'rate_limited' };
 
   const data = await response.json().catch(() => null);
-
-  if (!response.ok || !data) {
-    return { status: 'retryable' };
-  }
-
-  if (data.error) {
-    const code = data.error.code || data.error?.status;
-    const msg = (data.error.message || '').toLowerCase();
-    if (code === 429 || msg.includes('rate limit') || msg.includes('too many requests')) {
-      return { status: 'rate_limited' };
-    }
-    return { status: 'retryable' };
-  }
+  if (!response.ok || !data || data.error) return { ok: false, reason: 'api_error' };
 
   const choice = data?.choices?.[0];
-  let text = (choice?.message?.content || '').replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  if (!text) return { status: 'retryable' };
+  if (choice?.finish_reason === 'length') return { ok: false, reason: 'truncated' };
 
-  const firstBrace = text.indexOf('{');
-  const lastBrace = text.lastIndexOf('}');
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    text = text.slice(firstBrace, lastBrace + 1);
-  }
+  let text = (choice?.message?.content || '')
+    .replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  if (!text) return { ok: false, reason: 'empty' };
 
-  if (choice?.finish_reason === 'length') {
-    return { status: 'retryable' }; // 잘렸으면 다음 시도에서 max_tokens를 늘려 재시도
-  }
+  const s = text.indexOf('{'), e = text.lastIndexOf('}');
+  if (s !== -1 && e > s) text = text.slice(s, e + 1);
 
   try {
     JSON.parse(text);
+    return { ok: true, text };
   } catch {
-    return { status: 'retryable' };
+    return { ok: false, reason: 'invalid_json' };
   }
-
-  return { status: 'ok', text };
 }
 
 export default async function handler(req, res) {
@@ -87,26 +73,17 @@ export default async function handler(req, res) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
-  // 시도할 때마다 max_tokens을 조금씩 늘리고, 레이트리밋이면 더 오래 기다렸다가 재시도
-  const attempts = [
-    { maxTokens: 1500, waitBefore: 0 },
-    { maxTokens: 1500, waitBefore: 1500 },
-    { maxTokens: 2200, waitBefore: 3000 },
-    { maxTokens: 2200, waitBefore: 5000 },
-    { maxTokens: 2200, waitBefore: 8000 },
-  ];
+  for (const model of MODEL_FALLBACKS) {
+    const result = await tryModel(apiKey, model, prompt);
 
-  for (let i = 0; i < attempts.length; i++) {
-    if (attempts[i].waitBefore) await sleep(attempts[i].waitBefore);
-
-    const result = await callOpenRouter(apiKey, prompt, attempts[i].maxTokens);
-
-    if (result.status === 'ok') {
+    if (result.ok) {
       return res.status(200).json({ content: [{ text: result.text }] });
     }
-    // rate_limited / retryable 이면 다음 attempt로 계속 (루프가 알아서 대기 후 재시도)
+
+    // 레이트리밋이면 잠깐 대기 후 다음 모델
+    if (result.reason === 'rate_limited') await sleep(1500);
+    // 그 외 에러는 즉시 다음 모델로
   }
 
-  // 여기까지 왔다는 건 5번의 실제 재시도가 모두 실패했다는 뜻 — 정직하게 알림
-  return res.status(502).json({ error: '여러 번 재시도했지만 AI 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.' });
+  return res.status(502).json({ error: '일시적으로 AI 서버가 응답하지 않아요. 잠시 후 다시 시도해 주세요.' });
 }
