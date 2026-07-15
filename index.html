@@ -755,7 +755,7 @@ JSON만 출력. 다른 텍스트, 마크다운 없이.`;
       body:JSON.stringify({prompt})
     });
     const data=await res.json();
-    const raw=data.content.map(i=>i.text||'').join('');
+    const raw = data?.content ? data.content.map(i=>i.text||'').join('') : (data?.choices?.[0]?.message?.content || '');
     const clean=raw.replace(/```json|```/g,'').trim();
     const p=JSON.parse(clean);
     const keywords=(p.keyword||'').split(',').map(k=>`<div class="keyword">${k.trim()}</div>`).join('');
