@@ -746,8 +746,9 @@ async function runAnalysis(){
     </div>`;
   });
 
-  // parallel API calls
-  await Promise.all(langs.map(lang=>fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia)));
+  for(const lang of langs){
+    await fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia);
+  }
 
   // save to Supabase
   try {
