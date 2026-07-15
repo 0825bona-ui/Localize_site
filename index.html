@@ -698,10 +698,8 @@ async function runAnalysis(){
     </div>`;
   });
 
-  // sequential API calls (동시에 쏘면 무료 모델 레이트리밋에 걸려 전부 실패하므로 하나씩 순서대로 진행)
-  for (const lang of langs) {
-    await fetchLangAnalysis(lang,text,srcMeta,source,context,selectedMedia);
-  }
+  // 모든 언어를 한 번의 API 호출로 처리 (레이트리밋 방지)
+  await fetchAllAnalysis(langs,text,srcMeta,source,context,selectedMedia);
 
   // save to Supabase
   try {
@@ -726,6 +724,100 @@ async function runAnalysis(){
   document.getElementById('commentsWrap').style.display='block';
 }
 
+// ── 카드 렌더링 (배치 & 단건 공통) ────────────────────────────────
+function renderLangCard(lang, p) {
+  const m = LANG_META[lang];
+  const keywords = (p.keyword||'').split(',').map(k=>`<div class="keyword">${k.trim()}</div>`).join('');
+  const card = document.getElementById(`rc-${lang}`);
+  if (!card) return;
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
+      <span class="strategy-badge strategy-${p.strategy}">${p.strategy}</span>
+    </div>
+    <div class="result-localized">"${p.localized}"</div>
+    <div class="tone-line">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ${p.tone}
+    </div>
+    <div class="keywords">${keywords}</div>
+    <div class="cultural-text">${p.cultural}</div>`;
+  card.classList.remove('loading');
+}
+
+function showLangError(lang) {
+  const m = LANG_META[lang];
+  const card = document.getElementById(`rc-${lang}`);
+  if (!card) return;
+  card.classList.remove('loading');
+  card.innerHTML = `
+    <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
+    <div style="font-size:13px;color:var(--text2);padding:12px 0;text-align:center">
+      <div style="margin-bottom:10px">지금 분석 서버가 붐벼요.</div>
+      <button class="btn-secondary" onclick="retrySingleLang('${lang}')">다시 시도</button>
+    </div>`;
+}
+
+// ── 배치 분석 (모든 언어를 1회 API 호출로) ──────────────────────────
+async function fetchAllAnalysis(langs,text,srcMeta,source,context,media){
+  const contextPart=[];
+  if(media)contextPart.push(`매체 유형: ${media}`);
+  if(source)contextPart.push(`출처 작품: ${source}`);
+  if(context)contextPart.push(`맥락 설명: ${context}`);
+  const contextBlock=contextPart.length?`
+
+[출처 및 맥락]
+${contextPart.join('\n')}`:'';
+
+  const langList=langs.map(l=>`${l}(${LANG_META[l].label})`).join(', ');
+
+  const exampleKeys = langs.map(function(l){
+    return '"' + l + '": {"localized":"...","strategy":"직역|의역|문화적변형|원문유지 중 하나","tone":"...","cultural":"...","keyword":"키워드1,키워드2,키워드3"}';
+  }).join(',\n  ');
+
+  const prompt = '당신은 글로벌 광고 로컬라이징 및 언어 문화 전문가입니다.\n\n'
+    + '원문 (' + srcMeta.label + '): "' + text + '"' + contextBlock + '\n\n'
+    + '위 문구를 아래 언어들로 로컬라이징하는 분석을 JSON으로만 출력하세요.\n'
+    + '분석 언어: ' + langList + '\n\n'
+    + '각 언어 코드를 키로 하는 JSON 객체:\n'
+    + '{\n  ' + exampleKeys + '\n}\n\n'
+    + '각 항목 설명:\n'
+    + '- localized: 가장 자연스럽고 설득력 있는 로컬라이징 문구\n'
+    + '- strategy: 직역/의역/문화적변형/원문유지 중 정확히 하나\n'
+    + '- tone: 어조 변화를 한 줄로 (예: 명령형→철학적 선언)\n'
+    + '- cultural: 해당 언어권의 문화적 분석 3문장\n'
+    + '- keyword: 핵심 변화 키워드 3개 (쉼표 구분)\n\n'
+    + 'JSON만 출력. 다른 텍스트, 마크다운 없이.';
+
+  try {
+    const res=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+    const data=await res.json();
+    if(!res.ok||data?.error) throw new Error(data?.error||`서버 오류 (${res.status})`);
+
+    const raw=data?.content?data.content.map(i=>i.text||'').join(''):(data?.choices?.[0]?.message?.content||'');
+    let clean=raw.replace(/```json|```/g,'').trim();
+    if(!clean) throw new Error('빈 응답');
+    const s=clean.indexOf('{'),e=clean.lastIndexOf('}');
+    if(s!==-1&&e>s) clean=clean.slice(s,e+1);
+
+    const results=JSON.parse(clean);
+    langs.forEach(lang=>{
+      if(results[lang]) renderLangCard(lang,results[lang]);
+      else showLangError(lang);
+    });
+  } catch(e) {
+    // 배치 실패 시 언어별 단건 호출로 폴백
+    for(const lang of langs){
+      await fetchLangAnalysis(lang,text,srcMeta,source,context,media);
+    }
+  }
+}
+
+// ── 단건 분석 (재시도 버튼용) ────────────────────────────────────────
 async function fetchLangAnalysis(lang,text,srcMeta,source,context,media,isRetry){
   const m=LANG_META[lang];
   const contextPart=[];
@@ -757,50 +849,19 @@ JSON만 출력. 다른 텍스트, 마크다운 없이.`;
       body:JSON.stringify({prompt})
     });
     const data=await res.json();
-
-    if(!res.ok || data?.error){
-      throw new Error(data?.error || `요청 실패 (status ${res.status})`);
-    }
-
-    const raw = data?.content ? data.content.map(i=>i.text||'').join('') : (data?.choices?.[0]?.message?.content || '');
+    if(!res.ok||data?.error) throw new Error(data?.error||`요청 실패 (${res.status})`);
+    const raw=data?.content?data.content.map(i=>i.text||'').join(''):(data?.choices?.[0]?.message?.content||'');
     let clean=raw.replace(/```json|```/g,'').trim();
-    if(!clean){
-      throw new Error('빈 응답을 받았습니다.');
-    }
-    const firstBrace=clean.indexOf('{');
-    const lastBrace=clean.lastIndexOf('}');
-    if(firstBrace!==-1 && lastBrace!==-1 && lastBrace>firstBrace){
-      clean=clean.slice(firstBrace,lastBrace+1);
-    }
-    const p=JSON.parse(clean);
-    const keywords=(p.keyword||'').split(',').map(k=>`<div class="keyword">${k.trim()}</div>`).join('');
-    document.getElementById(`rc-${lang}`).innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
-        <span class="strategy-badge strategy-${p.strategy}">${p.strategy}</span>
-      </div>
-      <div class="result-localized">"${p.localized}"</div>
-      <div class="tone-line">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        ${p.tone}
-      </div>
-      <div class="keywords">${keywords}</div>
-      <div class="cultural-text">${p.cultural}</div>`;
-    document.getElementById(`rc-${lang}`).classList.remove('loading');
+    if(!clean) throw new Error('빈 응답');
+    const s=clean.indexOf('{'),e=clean.lastIndexOf('}');
+    if(s!==-1&&e>s) clean=clean.slice(s,e+1);
+    renderLangCard(lang,JSON.parse(clean));
   }catch(e){
-    // 서버가 이미 5번 재시도했지만 그래도 실패한 경우 → 클라이언트에서 한 번 더 처음부터 시도
     if(!isRetry){
-      await new Promise(r=>setTimeout(r,1000));
+      await new Promise(r=>setTimeout(r,1500));
       return fetchLangAnalysis(lang,text,srcMeta,source,context,media,true);
     }
-    // 그래도 실패하면 재시도 버튼 제공 (기술적 에러 문구 대신)
-    document.getElementById(`rc-${lang}`).classList.add('loading');
-    document.getElementById(`rc-${lang}`).innerHTML=`
-      <div class="result-lang-tag" style="background:${m.bg};color:${m.color}">${m.flag} ${m.label}</div>
-      <div style="font-size:13px;color:var(--text2);padding:12px 0;text-align:center">
-        <div style="margin-bottom:10px">지금 분석 서버가 붐벼요.</div>
-        <button class="btn-secondary" onclick="retrySingleLang('${lang}')">다시 시도</button>
-      </div>`;
+    showLangError(lang);
   }
 }
 
